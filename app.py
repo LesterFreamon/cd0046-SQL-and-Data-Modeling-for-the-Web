@@ -151,7 +151,7 @@ def show_venue(venue_id):
         "city": venue.city,
         "state": venue.state,
         "phone": venue.phone,
-        "website": venue.website_link,
+        "website_link": venue.website_link,
         "facebook_link": venue.facebook_link,
         "seeking_talent": venue.seeking_talent,
         "seeking_description": venue.seeking_description,
@@ -319,7 +319,7 @@ def show_artist(artist_id):
         "city": artist.city,
         "state": artist.state,
         "phone": artist.phone,
-        "website": artist.website_link,
+        "website_link": artist.website_link,
         "facebook_link": artist.facebook_link,
         "seeking_venue": artist.seeking_venue,
         "seeking_description": artist.seeking_description,
@@ -350,7 +350,7 @@ def edit_artist(artist_id):
         form.city.data = artist_query.city
         form.state.data = artist_query.state
         form.phone.data = artist_query.phone
-        form.website.data = artist_query.website_link
+        form.website_link.data = artist_query.website_link
         form.facebook_link.data = artist_query.facebook_link
         form.seeking_venue.data = artist_query.seeking_venue
         form.seeking_description.data = artist_query.seeking_description
@@ -364,7 +364,7 @@ def edit_artist(artist_id):
             "city": artist_query.city,
             "state": artist_query.state,
             "phone": artist_query.phone,
-            "website": artist_query.website_link,
+            "website_link": artist_query.website_link,
             "facebook_link": artist_query.facebook_link,
             "seeking_venue": artist_query.seeking_venue,
             "seeking_description": artist_query.seeking_description,
@@ -395,7 +395,7 @@ def edit_artist_submission(artist_id):
         artist.genres = request.form.getlist('genres')
         artist.facebook_link = request.form['facebook_link']
         artist.image_link = request.form['image_link']
-        artist.website = request.form['website']
+        artist.website_link = request.form['website_link']
 
         # Additional fields can be updated here as needed
 
@@ -428,7 +428,7 @@ def edit_venue(venue_id):
         form.city.data = venue_query.city
         form.state.data = venue_query.state
         form.phone.data = venue_query.phone
-        form.website.data = venue_query.website_link
+        form.website_link.data = venue_query.website_link
         form.facebook_link.data = venue_query.facebook_link
         form.seeking_talent.data = venue_query.seeking_talent
         form.seeking_description.data = venue_query.seeking_description
@@ -443,7 +443,7 @@ def edit_venue(venue_id):
             "city": venue_query.city,
             "state": venue_query.state,
             "phone": venue_query.phone,
-            "website": venue_query.website_link,
+            "website_link": venue_query.website_link,
             "facebook_link": venue_query.facebook_link,
             "seeking_talent": venue_query.seeking_talent,
             "seeking_description": venue_query.seeking_description,
@@ -473,7 +473,7 @@ def edit_venue_submission(venue_id):
         venue_to_update.city = request.form['city']
         venue_to_update.state = request.form['state']
         venue_to_update.phone = request.form['phone']
-        venue_to_update.website_link = request.form['website']
+        venue_to_update.website_link = request.form['website_link']
         venue_to_update.facebook_link = request.form['facebook_link']
         venue_to_update.seeking_talent = 'seeking_talent' in request.form
         venue_to_update.seeking_description = request.form['seeking_description']
@@ -515,7 +515,7 @@ def create_artist_submission():
         genres=request.form.getlist('genres'),
         facebook_link=request.form['facebook_link'],
         image_link=request.form['image_link'],
-        website_link=request.form['website']
+        website_link=request.form['website_link']
         # Add other fields as needed
     )
 
