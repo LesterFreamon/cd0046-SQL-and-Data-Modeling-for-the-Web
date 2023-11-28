@@ -12,7 +12,7 @@ import logging
 from logging import Formatter, FileHandler
 from forms import *
 
-from models import db, Artist, Venue, Show
+from models import db, Artist, Venue, Show, Genre
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -507,16 +507,20 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # Create a new Artist object using the form data
+    # Create a new Artist object using the form data
+    genre_names = request.form.getlist('genres')
+    genre_objects = Genre.query.filter(Genre.name.in_(genre_names)).all()
     new_artist = Artist(
         name=request.form['name'],
         city=request.form['city'],
         state=request.form['state'],
         phone=request.form['phone'],
-        genres=request.form.getlist('genres'),
+        genres=genre_objects,
         facebook_link=request.form['facebook_link'],
         image_link=request.form['image_link'],
-        website_link=request.form['website_link']
-        # Add other fields as needed
+        website_link=request.form['website_link'],
+        seeking_venue='seeking_venue' in request.form,
+        seeking_description=request.form['seeking_description']
     )
 
     try:
