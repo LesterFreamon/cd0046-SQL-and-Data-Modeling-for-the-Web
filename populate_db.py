@@ -21,7 +21,7 @@ with app.app_context():
 
     # Recreate all tables based on the models
     db.create_all()
-    print("printing inspector.get_table_names() ",inspector.get_table_names())
+    print("printing inspector.get_table_names() ", inspector.get_table_names())
 
     # Load the JSON data
     with open(INITIAL_DATA_PATH, "r") as f:
@@ -74,7 +74,7 @@ with app.app_context():
     db.session.commit()
 
     artist = Artist.query.get(4)
-    print('printing artist',artist)
+    print('printing artist', artist)
 
     # Add shows to the database
     show_objects = []

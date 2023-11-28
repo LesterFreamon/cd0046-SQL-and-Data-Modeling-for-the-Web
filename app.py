@@ -8,6 +8,7 @@ import babel
 from flask import Flask, render_template, request, flash, redirect, url_for, abort, jsonify
 from flask_moment import Moment
 from flask_migrate import Migrate
+from sqlalchemy import desc
 import logging
 from logging import Formatter, FileHandler
 from forms import *
@@ -48,7 +49,9 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
-    return render_template('pages/home.html')
+    venues = Venue.query.order_by(desc(Venue.created_date)).limit(10).all()
+    artists = Artist.query.order_by(desc(Artist.created_date)).limit(10).all()
+    return render_template('pages/home.html', venues=venues, artists=artists)
 
 
 #  Venues
@@ -82,7 +85,7 @@ def venues():
     # Convert the dictionary to a list for the template
     data = [value for key, value in venue_data.items()]
 
-    return render_template('pages/venues.html', areas=data);
+    return render_template('pages/venues.html', areas=data)
 
 
 @app.route('/venues/search', methods=['POST'])
@@ -177,20 +180,12 @@ def create_venue_form():
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
     # Get form data from request
-    form_data = request.form
+    form = VenueForm(request.form)
 
     try:
         # Create a new Venue instance using form data
-        new_venue = Venue(
-            name=form_data['name'],
-            city=form_data.get('city'),
-            state=form_data.get('state'),
-            address=form_data.get('address'),
-            phone=form_data.get('phone'),
-            genres=form_data.getlist('genres'),
-            facebook_link=form_data.get('facebook_link'),
-            # Add other fields as necessary
-        )
+        new_venue = Venue()
+        form.populate_obj(new_venue)
 
         # Add the new venue to the database session and commit
         db.session.add(new_venue)
@@ -199,12 +194,12 @@ def create_venue_submission():
         # Flash a success message
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
 
-    except:
+    except Exception:
         # Roll back the session in case of an error
         db.session.rollback()
 
         # Flash an error message
-        flash('An error occurred. Venue ' + form_data['name'] + ' could not be listed.')
+        flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
 
     finally:
         # Close the session
@@ -233,7 +228,7 @@ def delete_venue(venue_id):
         # Flash a success message
         flash('Venue was successfully deleted!')
 
-    except:
+    except Exception:
         # Roll back the session in case of an error
         db.session.rollback()
 
@@ -403,7 +398,7 @@ def edit_artist_submission(artist_id):
         db.session.commit()
         flash('Artist {} was successfully updated!'.format(artist.name))
 
-    except:
+    except Exception:
         db.session.rollback()
         flash('An error occurred. Artist {} could not be updated.'.format(artist.name))
     finally:
@@ -484,7 +479,7 @@ def edit_venue_submission(venue_id):
 
         flash(f'Venue {venue_to_update.name} was successfully updated!')
 
-    except:
+    except Exception:
         # Rollback the session in case of an error
         db.session.rollback()
         flash(f'An error occurred. Venue {venue_to_update.name} could not be updated.')
@@ -506,38 +501,35 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # Create a new Artist object using the form data
-    # Create a new Artist object using the form data
-    genre_names = request.form.getlist('genres')
-    genre_objects = Genre.query.filter(Genre.name.in_(genre_names)).all()
-    new_artist = Artist(
-        name=request.form['name'],
-        city=request.form['city'],
-        state=request.form['state'],
-        phone=request.form['phone'],
-        genres=genre_objects,
-        facebook_link=request.form['facebook_link'],
-        image_link=request.form['image_link'],
-        website_link=request.form['website_link'],
-        seeking_venue='seeking_venue' in request.form,
-        seeking_description=request.form['seeking_description']
-    )
+    form = ArtistForm(request.form)  # Create an instance of ArtistForm with form data
 
-    try:
-        # Add the new artist to the database and commit
-        db.session.add(new_artist)
-        db.session.commit()
+    if form.validate_on_submit():  # Validate the form data
+        try:
+            # Create a new Artist object using the validated data
+            new_artist = Artist(
+                name=form.name.data,
+                city=form.city.data,
+                state=form.state.data,
+                phone=form.phone.data,
+                genres=Genre.query.filter(Genre.name.in_(form.genres.data)).all(),
+                facebook_link=form.facebook_link.data,
+                image_link=form.image_link.data,
+                website_link=form.website_link.data,
+                seeking_venue=form.seeking_venue.data,
+                seeking_description=form.seeking_description.data
+            )
+            db.session.add(new_artist)
+            db.session.commit()
+            flash('Artist ' + form.name.data + ' was successfully listed!')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred. Artist ' + form.name.data + ' could not be listed. Error: ' + str(e))
+        finally:
+            db.session.close()
+    else:
+        flash('An error occurred. Check your form inputs.')
 
-        # Flash a success message
-        flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    except:
-        # Rollback the session in case of an error and flash an error message
-        db.session.rollback()
-        flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
-    finally:
-        db.session.close()
-
-    return render_template('pages/home.html')
+    return render_template('pages/home.html', form=form)
 
 
 #  Shows
@@ -571,28 +563,28 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # Create a new Show object using the form data
-    new_show = Show(
-        artist_id=request.form['artist_id'],
-        venue_id=request.form['venue_id'],
-        start_time=request.form['start_time']
-    )
+    form = ShowForm(request.form)  # Create an instance of ShowForm with form data
 
-    try:
-        # Add the new show to the database and commit
-        db.session.add(new_show)
-        db.session.commit()
+    if form.validate_on_submit():  # Validate the form data
+        try:
+            # Create a new Show object using the validated data
+            new_show = Show(
+                artist_id=form.artist_id.data,
+                venue_id=form.venue_id.data,
+                start_time=form.start_time.data
+            )
+            db.session.add(new_show)
+            db.session.commit()
+            flash('Show was successfully listed!')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred. Show could not be listed. Error: ' + str(e))
+        finally:
+            db.session.close()
+    else:
+        flash('An error occurred. Check your form inputs.')
 
-        # Flash a success message
-        flash('Show was successfully listed!')
-    except:
-        # Rollback the session in case of an error and flash an error message
-        db.session.rollback()
-        flash('An error occurred. Show could not be listed.')
-    finally:
-        db.session.close()
-
-    return render_template('pages/home.html')
+    return render_template('pages/shows_create.html', form=form)  # Ensure the correct template is used
 
 
 @app.errorhandler(404)
